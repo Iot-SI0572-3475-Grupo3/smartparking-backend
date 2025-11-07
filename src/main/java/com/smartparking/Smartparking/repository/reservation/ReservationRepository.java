@@ -1,0 +1,46 @@
+package com.smartparking.Smartparking.repository.reservation;
+
+import com.smartparking.Smartparking.entity.reservation.Reservation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ReservationRepository extends JpaRepository<Reservation, String> {
+
+    @Query("""
+        SELECT r FROM Reservation r 
+        WHERE r.parkingSpace.spaceId = :spaceId 
+          AND r.status IN ('pending', 'confirmed', 'active')
+          AND (
+            (r.endTime IS NULL AND r.startTime <= :endTime) OR
+            (r.endTime IS NOT NULL AND r.startTime < :endTime AND r.endTime > :startTime)
+          )
+        """)
+    List<Reservation> findOverlappingReservations(
+            @Param("spaceId") String spaceId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    // ReservationRepository.java
+    List<Reservation> findByUser_UserIdAndStatusInOrderByStartTimeDesc(
+            String userId,
+            Collection<Reservation.ReservationStatus> statuses
+    );
+
+    Optional<Reservation> findTopByUser_UserIdAndStatusInOrderByStartTimeDesc(
+            String userId,
+            Collection<Reservation.ReservationStatus> statuses
+    );
+
+    List<Reservation> findByStatusAndStartTimeBefore(
+            Reservation.ReservationStatus status,
+            LocalDateTime startTime
+    );
+}
