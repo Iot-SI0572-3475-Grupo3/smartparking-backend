@@ -43,4 +43,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
             Reservation.ReservationStatus status,
             LocalDateTime startTime
     );
+
+    // ReservationRepository.java
+    List<Reservation> findTop5ByUser_UserIdOrderByStartTimeDesc(String userId);
 }

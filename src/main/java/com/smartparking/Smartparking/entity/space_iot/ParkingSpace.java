@@ -38,18 +38,8 @@ public class ParkingSpace {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Relación inversa: Un espacio tiene un sensor (1:1)
-    @OneToOne(mappedBy = "parkingSpace", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Sensor sensor;
-
     @OneToOne(mappedBy = "parkingSpace", cascade = CascadeType.ALL, orphanRemoval = true)
     private SpaceLedStatus ledStatus;
-
-    @OneToMany(mappedBy = "parkingSpace", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ArrivalEvent> arrivalEvents = new ArrayList<>();
-
-    @OneToMany(mappedBy = "parkingSpace", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DepartureEvent> departureEvents = new ArrayList<>();
 
     @OneToMany(mappedBy = "parkingSpace", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReservationSlot> slots = new ArrayList<>();

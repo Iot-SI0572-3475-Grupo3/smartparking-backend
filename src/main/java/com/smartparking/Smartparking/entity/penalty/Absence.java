@@ -16,18 +16,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Absence {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "absence_id", length = 36, nullable = false)
     private String absenceId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", length = 36, nullable = false)
+    private String userId;
 
-    @ManyToOne
-    @JoinColumn(name = "reservation_id", nullable = false)
-    private Reservation reservation;
+    @Column(name = "reservation_id", length = 36, nullable = false)
+    private String reservationId;
 
     @Column(name = "detected_at")
     private LocalDateTime detectedAt = LocalDateTime.now();

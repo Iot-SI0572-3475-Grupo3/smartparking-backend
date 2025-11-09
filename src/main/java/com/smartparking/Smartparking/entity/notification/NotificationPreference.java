@@ -30,7 +30,7 @@ public class NotificationPreference {
     private NotificationType notificationType;
 
     @Column(name = "channel", length = 20, nullable = false)
-    private String channel; // "email", "sms", "push", "in_app"
+    private String channel;
 
     @Column(name = "is_enabled")
     private Boolean isEnabled = true;
@@ -48,4 +48,6 @@ public class NotificationPreference {
         reservation_confirmed, reservation_cancelled, penalty_issued,
         space_available, system_alert, payment_confirmed, payment_failed
     }
+
+    public enum Channel { email, sms, push, in_app }
 }

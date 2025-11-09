@@ -35,17 +35,6 @@ public class Reservation {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Dentro de la clase Reservation, agrega:
-
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DepartureEvent> departureEvents = new ArrayList<>();
-
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ArrivalEvent> arrivalEvents = new ArrayList<>();
-
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Absence> absences = new ArrayList<>();
-
 
     @ManyToOne
     @JoinColumn(name = "space_id", nullable = false)

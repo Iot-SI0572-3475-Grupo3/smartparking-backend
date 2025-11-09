@@ -14,14 +14,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PenaltyEvent {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "event_id", length = 36, nullable = false)
     private String eventId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", length = 36, nullable = false)
+    private String userId;
 
     @Column(name = "event_type", length = 100, nullable = false)
     private String eventType;

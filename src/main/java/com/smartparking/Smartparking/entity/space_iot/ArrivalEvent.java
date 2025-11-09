@@ -20,16 +20,14 @@ public class ArrivalEvent {
     @Column(name = "event_id", length = 36, nullable = false)
     private String eventId;
 
-    @ManyToOne
-    @JoinColumn(name = "reservation_id", nullable = false)
-    private Reservation reservation;
+    @Column(name = "reservation_id", length = 36, nullable = false)
+    private String reservationId;
 
-    @ManyToOne
-    @JoinColumn(name = "space_id", nullable = false)
-    private ParkingSpace parkingSpace;
+    @Column(name = "space_id", length = 36, nullable = false)
+    private String spaceId;
 
     @Column(name = "timestamp")
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();

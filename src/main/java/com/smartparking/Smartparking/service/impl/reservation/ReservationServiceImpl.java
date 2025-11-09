@@ -1,16 +1,29 @@
 package com.smartparking.Smartparking.service.impl.reservation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartparking.Smartparking.dto.request.reservation.CancelReservationRequest;
 import com.smartparking.Smartparking.dto.request.reservation.ReservationRequestDto;
 import com.smartparking.Smartparking.dto.response.reservation.ActiveReservationResponse;
 import com.smartparking.Smartparking.dto.response.reservation.ReservationHistoryResponse;
 import com.smartparking.Smartparking.dto.response.reservation.ReservationResponse;
 import com.smartparking.Smartparking.entity.iam.User;
+import com.smartparking.Smartparking.entity.notification.NotificationPreference;
+import com.smartparking.Smartparking.entity.penalty.Absence;
+import com.smartparking.Smartparking.entity.penalty.AbsenceCounter;
+import com.smartparking.Smartparking.entity.penalty.PenaltyEvent;
+import com.smartparking.Smartparking.entity.penalty.Suspension;
 import com.smartparking.Smartparking.entity.reservation.Reservation;
+import com.smartparking.Smartparking.entity.space_iot.ArrivalEvent;
 import com.smartparking.Smartparking.entity.space_iot.ParkingSpace;
 import com.smartparking.Smartparking.repository.UserRepository;
+import com.smartparking.Smartparking.repository.penalty.AbsenceCounterRepository;
+import com.smartparking.Smartparking.repository.penalty.AbsenceRepository;
+import com.smartparking.Smartparking.repository.penalty.PenaltyEventRepository;
+import com.smartparking.Smartparking.repository.penalty.SuspensionRepository;
 import com.smartparking.Smartparking.repository.reservation.ReservationRepository;
+import com.smartparking.Smartparking.repository.space_iot.ArrivalEventRepository;
 import com.smartparking.Smartparking.repository.space_iot.ParkingSpaceRepository;
+import com.smartparking.Smartparking.service.notification.NotificationService;
 import com.smartparking.Smartparking.service.reservation.ReservationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +35,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,6 +48,14 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final ParkingSpaceRepository parkingSpaceRepository;
     private final UserRepository userRepository;
+    private final ArrivalEventRepository arrivalEventRepository;
+    private final NotificationService notificationService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final AbsenceRepository absenceRepository;
+    private final AbsenceCounterRepository absenceCounterRepository;
+    private final PenaltyEventRepository penaltyEventRepository;
+    private final SuspensionRepository suspensionRepository;
 
     private static final BigDecimal COST_PER_HOUR = new BigDecimal("2.50");
 
@@ -199,7 +222,20 @@ public class ReservationServiceImpl implements ReservationService {
         space.setCurrentReservationId(null);
         parkingSpaceRepository.save(space);
 
-        return reservationRepository.save(reservation);
+        reservation = reservationRepository.save(reservation);
+
+        Map<String, Object> data = Map.of(
+                "spaceCode", space.getCode(),
+                "reason", request.getReason() != null ? request.getReason() : "No especificado"
+        );
+
+        notificationService.sendIfEnabled(
+                userId,
+                NotificationPreference.NotificationType.reservation_cancelled,
+                data
+        );
+
+        return reservation;
     }
 
     @Override
@@ -227,7 +263,22 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(Reservation.ReservationStatus.confirmed);
         reservation.setConfirmedAt(LocalDateTime.now());
 
-        return reservationRepository.save(reservation);
+        reservation = reservationRepository.save(reservation);
+
+        // NOTIFICACIÓN: Reserva confirmada
+        Map<String, Object> data = Map.of(
+                "spaceCode", reservation.getParkingSpace().getCode(),
+                "startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                "date", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        );
+
+        notificationService.sendIfEnabled(
+                userId,
+                NotificationPreference.NotificationType.reservation_confirmed,
+                data
+        );
+
+        return reservation;
     }
 
     @Override
@@ -266,14 +317,124 @@ public class ReservationServiceImpl implements ReservationService {
         );
 
         for (Reservation res : expired) {
+            String userId = res.getUser().getUserId();
+            ParkingSpace space = res.getParkingSpace();
+
+            // 1. Expirar reserva
             res.setStatus(Reservation.ReservationStatus.expired);
-            res.getParkingSpace().setStatus(ParkingSpace.SpaceStatus.available);
-            res.getParkingSpace().setCurrentReservationId(null);
-            parkingSpaceRepository.save(res.getParkingSpace());
+            res.setCompletedAt(LocalDateTime.now());
+
+            // 2. Liberar espacio
+            space.setStatus(ParkingSpace.SpaceStatus.available);
+            space.setCurrentReservationId(null);
+            parkingSpaceRepository.save(space);
+
+            // 3. Registrar ausencia
+            Absence absence = new Absence();
+            absence.setUserId(userId);
+            absence.setReservationId(res.getReservationId());
+            absence.setDetectedAt(LocalDateTime.now());
+            absenceRepository.save(absence);
+
+            // 4. Actualizar contador
+            AbsenceCounter counter = absenceCounterRepository.findByUserId(userId)
+                    .orElseGet(() -> {
+                        AbsenceCounter c = new AbsenceCounter();
+                        c.setUserId(userId);
+                        c.setAbsenceCount(0);
+                        c.setStrikeCount(0);
+                        c.setMaxStrikes(3);
+                        return c;
+                    });
+
+            counter.setAbsenceCount(counter.getAbsenceCount() + 1);
+            counter.setStrikeCount(counter.getStrikeCount() + 1);
+            counter.setLastUpdated(LocalDateTime.now());
+            absenceCounterRepository.save(counter);
+
+            // 5. Penalización si max strikes
+            if (counter.getStrikeCount() >= counter.getMaxStrikes()) {
+                PenaltyEvent penalty = new PenaltyEvent();
+                penalty.setUserId(userId);
+                penalty.setEventType("ABSENCE_PENALTY");
+                penalty.setPayload("{\"absenceId\": \"" + absence.getAbsenceId() + "\", \"reason\": \"expired_reservation\"}");
+                penalty.setOccured(LocalDateTime.now());
+                penaltyEventRepository.save(penalty);
+
+                Suspension suspension = new Suspension();
+                suspension.setUserId(userId);
+                suspension.setStartDate(LocalDateTime.now());
+                suspension.setEndDate(LocalDateTime.now().plusDays(3)); // 3 días de suspensión
+                suspension.setStatus(Suspension.Status.active);
+                suspensionRepository.save(suspension);
+            }
+
+            // 6. Notificación
+            Map<String, Object> data = Map.of(
+                    "spaceCode", space.getCode(),
+                    "strikeCount", counter.getStrikeCount(),
+                    "maxStrikes", counter.getMaxStrikes(),
+                    "reason", "Reserva expirada (no confirmada a tiempo)"
+            );
+
+            notificationService.sendIfEnabled(
+                    userId,
+                    NotificationPreference.NotificationType.penalty_issued,
+                    data
+            );
         }
 
         if (!expired.isEmpty()) {
             reservationRepository.saveAll(expired);
         }
+    }
+
+    @Override
+    @Transactional
+    public Reservation activateReservationBySpace(String spaceId) {
+
+        ParkingSpace space = parkingSpaceRepository.findById(spaceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Espacio no encontrado"));
+
+        String currentResId = space.getCurrentReservationId();
+        if (currentResId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay reserva activa para este espacio");
+        }
+
+        Reservation reservation = reservationRepository.findById(currentResId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva activa no encontrada"));
+
+        if (reservation.getStatus() != Reservation.ReservationStatus.confirmed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La reserva no está confirmada para activar");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime start = reservation.getStartTime();
+        if (now.isBefore(start.minusMinutes(15)) || now.isAfter(start.plusMinutes(15))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fuera del ventana de llegada para activación automática");
+        }
+
+        reservation.setStatus(Reservation.ReservationStatus.active);
+
+        ArrivalEvent arrival = new ArrivalEvent();
+        arrival.setReservationId(reservation.getReservationId());
+        arrival.setSpaceId(spaceId);
+        arrival.setTimestamp(now);
+        arrivalEventRepository.save(arrival);
+
+        reservation = reservationRepository.save(reservation);
+
+        Map<String, Object> data = Map.of(
+                "spaceCode", reservation.getParkingSpace().getCode(),
+                "message", "¡Tu sesión ha comenzado!"
+        );
+
+        notificationService.sendIfEnabled(
+                reservation.getUser().getUserId(),
+                NotificationPreference.NotificationType.system_alert,
+                data
+        );
+
+        return reservation;
     }
 }

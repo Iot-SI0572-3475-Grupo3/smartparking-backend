@@ -14,14 +14,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Suspension {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "suspension_id", length = 36, nullable = false)
     private String suspensionId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", length = 36, nullable = false)
+    private String userId;
 
     @Column(name = "start_date")
     private LocalDateTime startDate;
@@ -31,9 +31,9 @@ public class Suspension {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private Status status = Status.ACTIVE;
+    private Status status = Status.active;
 
     public enum Status {
-        ACTIVE, COMPLETED
+        active, completed
     }
 }

@@ -4,6 +4,7 @@ package com.smartparking.Smartparking.service.impl.analytics;
 import com.smartparking.Smartparking.dto.response.analytics.DashboardResponse;
 import com.smartparking.Smartparking.dto.response.iam.SessionResponse;
 import com.smartparking.Smartparking.dto.response.space_iot.ParkingSpaceResponse;
+import com.smartparking.Smartparking.entity.penalty.AbsenceCounter;
 import com.smartparking.Smartparking.entity.reservation.Reservation;
 import com.smartparking.Smartparking.entity.space_iot.ParkingSpace;
 import com.smartparking.Smartparking.repository.penalty.AbsenceCounterRepository;
@@ -29,15 +30,33 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public DashboardResponse getUserDashboard(String userId) {
+
+        // 1. Espacios disponibles
         List<ParkingSpace> availableSpaces = parkingSpaceRepository.findAvailableSpaces();
-        List<Reservation> recentReservations = null;
+
+        // 2. Reservas recientes (corregido: no null)
+        List<Reservation> recentReservations = reservationRepository
+                .findTop5ByUser_UserIdOrderByStartTimeDesc(userId); // Ajusta según tu repo
+
+        // 3. Contador de ausencias (corregido: evita null)
         Long absenceCount = absenceCounterRepository.getTotalAbsenceCountByUserId(userId);
+        int absences = (absenceCount != null) ? absenceCount.intValue() : 0;
+
+        // 4. Verificar si puede reservar (opcional: strikes)
+        AbsenceCounter counter = absenceCounterRepository
+                .findTopByUserIdOrderByLastUpdatedDesc(userId)
+                .orElse(null);
+
+        boolean canReserve = counter == null || counter.getStrikeCount() < counter.getMaxStrikes();
+        if (counter != null && counter.getStrikeCount() >= counter.getMaxStrikes()) {
+            canReserve = false;
+        }
 
         return DashboardResponse.builder()
                 .availableSpaces(mapToSpaceResponse(availableSpaces))
                 .recentSessions(mapToSessionResponse(recentReservations))
-                .absenceCount(absenceCount != null ? absenceCount.intValue() : 0)
-                .canReserve(true)
+                .absenceCount(absences)
+                .canReserve(canReserve)
                 .build();
     }
 
@@ -52,6 +71,10 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private List<SessionResponse> mapToSessionResponse(List<Reservation> reservations) {
+        if (reservations == null || reservations.isEmpty()) {
+            return List.of();
+        }
+
         return reservations.stream()
                 .map(r -> SessionResponse.builder()
                         .spaceCode(r.getParkingSpace().getCode())
@@ -59,7 +82,9 @@ public class DashboardServiceImpl implements DashboardService {
                                 ? r.getDate().format(DATE_FMT)
                                 : r.getStartTime().toLocalDate().format(DATE_FMT))
                         .start(r.getStartTime().toLocalTime().format(TIME_FMT))
-                        .end(r.getEndTime().toLocalTime().format(TIME_FMT))
+                        .end(r.getEndTime() != null
+                                ? r.getEndTime().toLocalTime().format(TIME_FMT)
+                                : "En curso")
                         .build())
                 .toList();
     }

@@ -14,14 +14,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AbsenceCounter {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "counter_id", length = 36, nullable = false)
     private String counterId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", length = 36, nullable = false)
+    private String userId;
 
     @Column(name = "absence_count")
     private Integer absenceCount = 0;
