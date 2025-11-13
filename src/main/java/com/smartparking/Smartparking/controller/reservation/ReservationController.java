@@ -148,7 +148,7 @@ public class ReservationController {
 
         // Calcular costo
         long minutes = Duration.between(res.getStartTime(), LocalDateTime.now()).toMinutes();
-        BigDecimal cost = BigDecimal.valueOf(minutes).multiply(new BigDecimal("0.05")); // Ej: $0.05/min
+        BigDecimal cost = BigDecimal.valueOf(minutes).multiply(new BigDecimal("0.05"));
         res.setTotalCost(cost);
         res.setPaymentStatus(Reservation.PaymentStatus.paid);
 
@@ -159,5 +159,12 @@ public class ReservationController {
         parkingSpaceRepository.save(space);
 
         return reservationRepository.save(res);
+    }
+
+    @PostMapping("/{reservationId}/expire")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> expireReservation(@PathVariable String reservationId) {
+        reservationService.expireReservationManually(reservationId);
+        return ResponseEntity.noContent().build();
     }
 }

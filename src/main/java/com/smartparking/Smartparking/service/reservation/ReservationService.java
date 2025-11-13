@@ -26,4 +26,6 @@ public interface ReservationService {
     void expirePendingReservations();
 
     Reservation activateReservationBySpace(String spaceId);
+
+    void expireReservationManually(String reservationId);
 }

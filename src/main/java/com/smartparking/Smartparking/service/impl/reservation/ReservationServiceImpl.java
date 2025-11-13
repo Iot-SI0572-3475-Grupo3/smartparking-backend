@@ -15,6 +15,8 @@ import com.smartparking.Smartparking.entity.penalty.Suspension;
 import com.smartparking.Smartparking.entity.reservation.Reservation;
 import com.smartparking.Smartparking.entity.space_iot.ArrivalEvent;
 import com.smartparking.Smartparking.entity.space_iot.ParkingSpace;
+import com.smartparking.Smartparking.exception.ResourceNotFoundException;
+import com.smartparking.Smartparking.exception.BadRequestException;
 import com.smartparking.Smartparking.repository.UserRepository;
 import com.smartparking.Smartparking.repository.penalty.AbsenceCounterRepository;
 import com.smartparking.Smartparking.repository.penalty.AbsenceRepository;
@@ -436,5 +438,89 @@ public class ReservationServiceImpl implements ReservationService {
         );
 
         return reservation;
+    }
+
+    @Override
+    @Transactional
+    public void expireReservationManually(String reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada: " + reservationId));
+
+        // Validar estado
+        if (reservation.getStatus() != Reservation.ReservationStatus.confirmed &&
+                reservation.getStatus() != Reservation.ReservationStatus.pending) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Solo reservas pending o confirmed pueden expirar."
+            );
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        String userId = reservation.getUser().getUserId(); // ← CORREGIDO
+        ParkingSpace space = reservation.getParkingSpace();
+
+        // 1. Registrar ausencia
+        Absence absence = new Absence();
+        absence.setUserId(userId);
+        absence.setReservationId(reservationId);
+        absence.setDetectedAt(now);
+        absenceRepository.save(absence);
+
+        // 2. Actualizar contador
+        AbsenceCounter counter = absenceCounterRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    AbsenceCounter c = new AbsenceCounter();
+                    c.setUserId(userId);
+                    c.setAbsenceCount(0);
+                    c.setStrikeCount(0);
+                    c.setMaxStrikes(3);
+                    return c;
+                });
+
+        counter.setAbsenceCount(counter.getAbsenceCount() + 1);
+        counter.setStrikeCount(counter.getStrikeCount() + 1);
+        counter.setLastUpdated(now);
+        absenceCounterRepository.save(counter);
+
+        // 3. Penalización
+        if (counter.getStrikeCount() >= counter.getMaxStrikes()) {
+            PenaltyEvent penalty = new PenaltyEvent();
+            penalty.setUserId(userId);
+            penalty.setEventType("ABSENCE_PENALTY");
+            penalty.setPayload("{\"absenceId\": \"" + absence.getAbsenceId() + "\", \"reason\": \"no_show\"}");
+            penalty.setOccured(now);
+            penaltyEventRepository.save(penalty);
+
+            Suspension suspension = new Suspension();
+            suspension.setUserId(userId);
+            suspension.setStartDate(now);
+            suspension.setEndDate(now.plusDays(3));
+            suspension.setStatus(Suspension.Status.active);
+            suspensionRepository.save(suspension);
+        }
+
+        // 4. Expirar reserva
+        reservation.setStatus(Reservation.ReservationStatus.expired);
+        reservation.setCompletedAt(now);
+        reservationRepository.save(reservation);
+
+        // 5. Liberar espacio
+        space.setStatus(ParkingSpace.SpaceStatus.available);
+        space.setCurrentReservationId(null);
+        parkingSpaceRepository.save(space);
+
+        // 6. Notificación
+        Map<String, Object> data = Map.of(
+                "spaceCode", space.getCode(),
+                "strikeCount", counter.getStrikeCount(),
+                "maxStrikes", counter.getMaxStrikes(),
+                "reason", "No llegaste a tiempo al espacio"
+        );
+
+        notificationService.sendIfEnabled(
+                userId,
+                NotificationPreference.NotificationType.penalty_issued,
+                data
+        );
     }
 }

@@ -1,5 +1,9 @@
 package com.smartparking.Smartparking.repository.reservation;
 
+import com.smartparking.Smartparking.entity.penalty.Absence;
+import com.smartparking.Smartparking.entity.penalty.AbsenceCounter;
+import com.smartparking.Smartparking.entity.penalty.PenaltyEvent;
+import com.smartparking.Smartparking.entity.penalty.Suspension;
 import com.smartparking.Smartparking.entity.reservation.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -46,4 +50,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
 
     // ReservationRepository.java
     List<Reservation> findTop5ByUser_UserIdOrderByStartTimeDesc(String userId);
+
+    // AbsenceRepository.java
+    public interface AbsenceRepository extends JpaRepository<Absence, String> {}
+
+    // AbsenceCounterRepository.java
+    public interface AbsenceCounterRepository extends JpaRepository<AbsenceCounter, String> {
+        Optional<AbsenceCounter> findByUserId(String userId);
+    }
+
+    // PenaltyEventRepository.java
+    public interface PenaltyEventRepository extends JpaRepository<PenaltyEvent, String> {}
+
+    // SuspensionRepository.java
+    public interface SuspensionRepository extends JpaRepository<Suspension, String> {}
 }
