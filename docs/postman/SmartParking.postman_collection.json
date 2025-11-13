@@ -1,0 +1,689 @@
+{
+  "info": {
+    "_postman_id": "b7c8e9f4-1234-4c7d-9d5c-6a1b8cf3a001",
+    "name": "SmartParking API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección agrupada por dominios para probar la API de SmartParking."
+  },
+  "item": [
+    {
+      "name": "Auth & Users",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.token) {",
+                  "  pm.collectionVariables.set('authToken', response.token);",
+                  "  pm.collectionVariables.set('sessionId', response.sessionId || '');",
+                  "  console.log('Token guardado en authToken');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lucia@example.com\",\n  \"password\": \"Passw0rd!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "login"]
+            }
+          }
+        },
+        {
+          "name": "Registrar Usuario Universitario",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Lucia\",\n  \"lastName\": \"Prado\",\n  \"email\": \"lucia@example.com\",\n  \"password\": \"Passw0rd!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/register/university-member",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "register", "university-member"]
+            }
+          }
+        },
+        {
+          "name": "Registrar Administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Admin\",\n  \"lastName\": \"Root\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass1!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/register/administrator",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "register", "administrator"]
+            }
+          }
+        },
+        {
+          "name": "Crear Usuario (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"passwordHash\": \"Temp123!\",\n  \"role\": \"university_member\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users"]
+            }
+          }
+        },
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"updated@example.com\",\n  \"passwordHash\": \"\",\n  \"role\": \"administrator\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/logout/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "users", "logout", "{{sessionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Profiles",
+      "item": [
+        {
+          "name": "Crear Perfil",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Lucia\",\n  \"lastName\": \"Prado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profiles/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profiles", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profiles/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profiles", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Lucia\",\n  \"lastName\": \"Actualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profiles/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profiles", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Perfil",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profiles/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profiles", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Sessions",
+      "item": [
+        {
+          "name": "Crear Sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenHash\": \"hashed-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-sessions/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-sessions", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Sesiones Activas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-sessions/active/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-sessions", "active", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Buscar por Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-sessions/token/{{tokenHash}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-sessions", "token", "{{tokenHash}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Sesión",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-sessions", "{{sessionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parking Spaces",
+      "item": [
+        {
+          "name": "Crear Espacio",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"A101\",\n  \"status\": \"available\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/space-iot/parking-spaces",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "space-iot", "parking-spaces"]
+            }
+          }
+        },
+        {
+          "name": "Listar Espacios",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/space-iot/parking-spaces",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "space-iot", "parking-spaces"]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/space-iot/parking-spaces/status/{{spaceStatus}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "space-iot", "parking-spaces", "status", "{{spaceStatus}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Espacio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"A101B\",\n  \"status\": \"maintenance\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/space-iot/parking-spaces/{{spaceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "space-iot", "parking-spaces", "{{spaceId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Crear Reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.reservationId) {",
+                  "  pm.collectionVariables.set('reservationId', response.reservationId);",
+                  "  console.log('reservationId guardado en colección');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{spaceId}}\",\n  \"startTime\": \"2025-11-13T14:30:00\",\n  \"vehicleInfo\": \"{\\\"plate\\\":\\\"ABC123\\\",\\\"color\\\":\\\"Rojo\\\"}\",\n  \"specialRequirements\": \"Cerca de la entrada\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation"]
+            }
+          }
+        },
+        {
+          "name": "Confirmar Reserva",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/{{reservationId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "{{reservationId}}", "confirm"]
+            }
+          }
+        },
+        {
+          "name": "Activar Reserva (Usuario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/{{reservationId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "{{reservationId}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Completar Reserva",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/{{reservationId}}/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "{{reservationId}}", "complete"]
+            }
+          }
+        },
+        {
+          "name": "Cancelar Reserva",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cambio de planes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/{{reservationId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "{{reservationId}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Expirar Reserva Manualmente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/{{reservationId}}/expire",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "{{reservationId}}", "expire"]
+            }
+          }
+        },
+        {
+          "name": "Reserva Activa",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "active"]
+            }
+          }
+        },
+        {
+          "name": "Historial de Reservas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IoT Integration",
+      "item": [
+        {
+          "name": "Activar Reserva (IoT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authTokenIot}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/iot/reservation/activate/{{spaceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "iot", "reservation", "activate", "{{spaceId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Obtener Preferencias",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Preferencias",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"notificationType\": \"reservation_confirmed\",\n    \"channel\": \"push\",\n    \"isEnabled\": true,\n    \"quietHoursStart\": \"23:00\",\n    \"quietHoursEnd\": \"06:00\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Registrar Token de Dispositivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-token\",\n  \"platform\": \"android\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "token"]
+            }
+          }
+        },
+        {
+          "name": "Listar Notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar Notificación Como Leída",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "{{notificationId}}", "read"]
+            }
+          }
+        },
+        {
+          "name": "Broadcast (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authTokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userIds\": [\"{{userId}}\"],\n  \"type\": \"system_alert\",\n  \"data\": {\n    \"title\": \"Aviso\",\n    \"message\": \"Prueba de notificación\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/broadcast",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "broadcast"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Dashboard Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reservation/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reservation", "dashboard"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "authToken", "value": "" },
+    { "key": "authTokenAdmin", "value": "" },
+    { "key": "authTokenIot", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "spaceId", "value": "" },
+    { "key": "spaceStatus", "value": "available" },
+    { "key": "reservationId", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "tokenHash", "value": "" },
+    { "key": "notificationId", "value": "" }
+  ]
+}
+
