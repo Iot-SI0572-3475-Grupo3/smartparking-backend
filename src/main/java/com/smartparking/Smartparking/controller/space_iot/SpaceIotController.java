@@ -22,7 +22,7 @@ class SpaceIotController {
     private final ReservationMapper reservationMapper;
 
     @PostMapping("/activate/{spaceId}")
-    @PreAuthorize("hasRole('IOT')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReservationResponse> activateReservation(@PathVariable String spaceId) {
         Reservation activated = reservationService.activateReservationBySpace(spaceId);
         return ResponseEntity.ok(reservationMapper.toResponse(activated));
