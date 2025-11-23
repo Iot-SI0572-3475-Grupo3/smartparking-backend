@@ -21,7 +21,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    @PreAuthorize("hasRole('administrator')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
         UserResponseDto response = userService.createUser(userRequestDto);
         return ResponseEntity.ok(response);
@@ -74,7 +74,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('administrator')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<Void> deleteUser(@PathVariable String userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();

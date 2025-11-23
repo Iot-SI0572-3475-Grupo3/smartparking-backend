@@ -32,7 +32,7 @@ public class ParkingSpaceController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('administrator')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<ParkingSpaceResponse> createParkingSpace(
             @Valid @RequestBody ParkingSpaceRequestDto request) {
         ParkingSpaceResponse response = parkingSpaceService.createParkingSpace(request);
@@ -40,7 +40,7 @@ public class ParkingSpaceController {
     }
 
     @PutMapping("/{spaceId}")
-    @PreAuthorize("hasRole('administrator')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<ParkingSpaceResponse> updateParkingSpace(
             @PathVariable String spaceId,
             @Valid @RequestBody UpdateParkingSpaceDto request) {

@@ -130,7 +130,7 @@ public class NotificationController {
     }
 
     @PostMapping("/broadcast")
-    @PreAuthorize("hasRole('administrator')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<Void> broadcast(
             @RequestBody BroadcastRequest request) {
 
