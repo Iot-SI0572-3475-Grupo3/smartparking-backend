@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/user-profiles")
+@RequestMapping("/api/v1/user-profiles")
 public class UserProfileController {
 
     @Autowired
