@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservationService {
-    ReservationResponse createReservation(String userId, ReservationRequestDto request);
+    ReservationResponse createReservation(ReservationRequestDto request);
 
     List<ReservationHistoryResponse> getReservationHistory(String userId);
 

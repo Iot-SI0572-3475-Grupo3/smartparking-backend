@@ -152,6 +152,8 @@ public class UserServiceImpl implements UserService {
         LoginResponseDto response = new LoginResponseDto();
         response.setToken(token);
         response.setSessionId(session.getSessionId());
+        response.setStatus(user.getStatus());
+
         return response;
     }
 

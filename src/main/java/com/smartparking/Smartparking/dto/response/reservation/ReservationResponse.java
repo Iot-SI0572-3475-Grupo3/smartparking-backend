@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReservationResponse {
     private String reservationId;
+    private String userId;
     private String spaceCode;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

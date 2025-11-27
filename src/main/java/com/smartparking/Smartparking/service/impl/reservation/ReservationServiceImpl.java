@@ -63,10 +63,10 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public ReservationResponse createReservation(String userId, ReservationRequestDto request) {
+    public ReservationResponse createReservation(ReservationRequestDto request) {
 
         // 1. Validar usuario
-        User user = userRepository.findById(userId)
+        User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         // 2. Validar espacio
@@ -115,6 +115,7 @@ public class ReservationServiceImpl implements ReservationService {
         // 6. Respuesta
         return ReservationResponse.builder()
                 .reservationId(reservation.getReservationId())
+                .userId(user.getUserId())
                 .spaceCode(space.getCode())
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())

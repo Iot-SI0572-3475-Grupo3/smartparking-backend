@@ -69,11 +69,8 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     private UserProfileResponseDto convertToResponseDto(UserProfile profile) {
         UserProfileResponseDto dto = new UserProfileResponseDto();
-        dto.setProfileId(profile.getProfileId());
         dto.setFirstName(profile.getFirstName());
         dto.setLastName(profile.getLastName());
-        dto.setCreatedAt(profile.getCreatedAt());
-        dto.setUpdatedAt(profile.getUpdatedAt());
         return dto;
     }
 }

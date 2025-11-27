@@ -19,6 +19,7 @@ public class ReservationRequestDto {
 
     @NotBlank
     private String spaceId;
+    private String userId;
 
     @NotNull
     @FutureOrPresent

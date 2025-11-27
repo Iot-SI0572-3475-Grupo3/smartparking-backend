@@ -46,8 +46,7 @@ public class ReservationController {
     public ResponseEntity<ReservationResponse> createReservation(
             @Valid @RequestBody ReservationRequestDto request) {
 
-        String userId = getCurrentUserId();
-        ReservationResponse response = reservationService.createReservation(userId, request);
+        ReservationResponse response = reservationService.createReservation(request);
         return ResponseEntity.status(201).body(response);
     }
 
