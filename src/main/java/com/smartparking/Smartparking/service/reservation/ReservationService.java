@@ -6,6 +6,9 @@ import com.smartparking.Smartparking.dto.response.reservation.ActiveReservationR
 import com.smartparking.Smartparking.dto.response.reservation.ReservationHistoryResponse;
 import com.smartparking.Smartparking.dto.response.reservation.ReservationResponse;
 import com.smartparking.Smartparking.entity.reservation.Reservation;
+import com.smartparking.Smartparking.entity.space_iot.ParkingSpace;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,4 +31,8 @@ public interface ReservationService {
     Reservation activateReservationBySpace(String spaceId);
 
     void expireReservationManually(String reservationId);
+
+    List<ReservationResponse> getReservationsByParkingSpaceCode(String code);
+
+    Page<ReservationResponse> getReservationsByParkingSpaceCode(String code, Pageable pageable);
 }

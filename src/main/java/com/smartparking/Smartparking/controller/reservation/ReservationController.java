@@ -166,4 +166,15 @@ public class ReservationController {
         reservationService.expireReservationManually(reservationId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/parking-spaces-reservations/{code}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ReservationResponse>> getReservationsByCode(
+            @PathVariable String code) {
+
+        List<ReservationResponse> reservations =
+                reservationService.getReservationsByParkingSpaceCode(code);
+
+        return ResponseEntity.ok(reservations);
+    }
 }

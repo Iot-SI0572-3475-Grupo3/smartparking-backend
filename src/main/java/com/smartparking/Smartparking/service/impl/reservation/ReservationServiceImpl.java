@@ -29,6 +29,8 @@ import com.smartparking.Smartparking.service.notification.NotificationService;
 import com.smartparking.Smartparking.service.reservation.ReservationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final AbsenceCounterRepository absenceCounterRepository;
     private final PenaltyEventRepository penaltyEventRepository;
     private final SuspensionRepository suspensionRepository;
+
 
     private static final BigDecimal COST_PER_HOUR = new BigDecimal("2.50");
 
@@ -523,5 +526,52 @@ public class ReservationServiceImpl implements ReservationService {
                 NotificationPreference.NotificationType.penalty_issued,
                 data
         );
+    }
+
+    @Override
+    public List<ReservationResponse> getReservationsByParkingSpaceCode(String code) {
+        validateParkingSpaceExists(code);
+
+        return reservationRepository
+                .findByParkingSpace_CodeOrderByStartTimeAsc(code)  // ← ahora sí ordena bien
+                .stream()
+                .map(this::toReservationResponse)
+                .toList();
+    }
+
+    @Override
+    public Page<ReservationResponse> getReservationsByParkingSpaceCode(String code, Pageable pageable) {
+        validateParkingSpaceExists(code);
+
+        return reservationRepository
+                .findByParkingSpace_CodeOrderByStartTimeDesc(code, pageable)
+                .map(this::toReservationResponse);
+    }
+
+    private void validateParkingSpaceExists(String code) {
+        parkingSpaceRepository.findByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Parking space not found with code: " + code));
+    }
+
+    private ReservationResponse toReservationResponse(Reservation r) {
+        return ReservationResponse.builder()
+                .reservationId(r.getReservationId())
+                .userId(r.getUser().getUserId())
+                .spaceCode(r.getParkingSpace().getCode())
+                .startTime(r.getStartTime())
+                .endTime(r.getEndTime())
+                .date(r.getDate())
+                .status(r.getStatus().name())                    // String
+                .vehicleInfo(r.getVehicleInfo())
+                .specialRequirements(r.getSpecialRequirements())
+                .totalCost(r.getTotalCost())
+                .paymentStatus(r.getPaymentStatus() != null ? r.getPaymentStatus().name() : null)
+                .createdAt(r.getCreatedAt())
+                .confirmedAt(r.getConfirmedAt())
+                .cancelledAt(r.getCancelledAt())
+                .completedAt(r.getCompletedAt())
+                .cancellationReason(r.getCancellationReason())
+                .build();
     }
 }

@@ -5,6 +5,8 @@ import com.smartparking.Smartparking.entity.penalty.AbsenceCounter;
 import com.smartparking.Smartparking.entity.penalty.PenaltyEvent;
 import com.smartparking.Smartparking.entity.penalty.Suspension;
 import com.smartparking.Smartparking.entity.reservation.Reservation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -64,4 +66,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
 
     // SuspensionRepository.java
     public interface SuspensionRepository extends JpaRepository<Suspension, String> {}
+
+    // Busca por el CODE del ParkingSpace y ordena por fecha de creación DESC
+    List<Reservation> findByParkingSpace_CodeOrderByCreatedAtDesc(String code);
+
+    // Opcional: si también quieres paginación
+    Page<Reservation> findByParkingSpace_CodeOrderByCreatedAtDesc(String code, Pageable pageable);
+
+    // ReservationRepository.java → CAMBIA EL MÉTODO A ESTO:
+    List<Reservation> findByParkingSpace_CodeOrderByStartTimeAsc(String code);
+
+    // Opcional: si en el futuro necesitas paginación
+    Page<Reservation> findByParkingSpace_CodeOrderByStartTimeDesc(String code, Pageable pageable);
 }

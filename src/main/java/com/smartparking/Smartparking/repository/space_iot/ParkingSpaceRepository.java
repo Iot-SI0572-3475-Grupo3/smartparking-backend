@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ParkingSpaceRepository extends JpaRepository<ParkingSpace, String> {
@@ -21,4 +22,6 @@ public interface ParkingSpaceRepository extends JpaRepository<ParkingSpace, Stri
     List<ParkingSpace> findByStatus(ParkingSpace.SpaceStatus status);
 
     boolean existsByCode(String code);
+
+    Optional<ParkingSpace> findByCode(String code);
 }
