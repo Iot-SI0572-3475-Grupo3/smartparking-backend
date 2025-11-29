@@ -70,6 +70,16 @@ public class ReservationController {
         return ResponseEntity.ok(history);
     }
 
+    @GetMapping("/all-history")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ReservationHistoryResponse>> getAllReservationHistory() {
+
+        List<ReservationHistoryResponse> history =
+                reservationService.getAllReservationHistory();
+
+        return ResponseEntity.ok(history);
+    }
+
     @GetMapping("/active")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ActiveReservationResponse> getActiveReservation() {

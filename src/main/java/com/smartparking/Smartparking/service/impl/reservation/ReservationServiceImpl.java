@@ -162,6 +162,29 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    public List<ReservationHistoryResponse> getAllReservationHistory() {
+
+        return reservationRepository
+                .findAll()
+                .stream()
+                .map(res -> ReservationHistoryResponse.builder()
+                        .reservationId(res.getReservationId())
+                        .spaceCode(res.getParkingSpace().getCode())
+                        .startTime(res.getStartTime())
+                        .endTime(res.getEndTime())
+                        .date(res.getDate())
+                        .status(res.getStatus().name().toLowerCase())
+                        .vehicleInfo(res.getVehicleInfo())
+                        .specialRequirements(res.getSpecialRequirements())
+                        .totalCost(res.getTotalCost() != null ? res.getTotalCost() : BigDecimal.ZERO)
+                        .completedAt(res.getCompletedAt())
+                        .cancelledAt(res.getCancelledAt())
+                        .cancellationReason(res.getCancellationReason())
+                        .build())
+                .toList();
+    }
+
+    @Override
     public Optional<ActiveReservationResponse> getActiveReservation(String userId) {
 
         List<Reservation.ReservationStatus> activeStatuses = List.of(

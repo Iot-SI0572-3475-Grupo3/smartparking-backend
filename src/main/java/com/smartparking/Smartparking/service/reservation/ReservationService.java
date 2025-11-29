@@ -18,6 +18,8 @@ public interface ReservationService {
 
     List<ReservationHistoryResponse> getReservationHistory(String userId);
 
+    List<ReservationHistoryResponse> getAllReservationHistory();
+
     Optional<ActiveReservationResponse> getActiveReservation(String userId);
 
     Reservation cancelReservation(String reservationId, String userId, CancelReservationRequest request);
