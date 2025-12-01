@@ -3,6 +3,7 @@ package com.smartparking.Smartparking.controller.space_iot;
 import com.smartparking.Smartparking.dto.request.space_iot.ParkingSpaceRequestDto;
 import com.smartparking.Smartparking.dto.request.space_iot.UpdateParkingSpaceDto;
 import com.smartparking.Smartparking.dto.response.space_iot.ParkingSpaceResponse;
+import com.smartparking.Smartparking.dto.response.space_iot.ParkingSpaceStatusResponse;
 import com.smartparking.Smartparking.service.space_iot.ParkingSpaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,15 @@ public class ParkingSpaceController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ParkingSpaceResponse>> getParkingSpacesByStatus(@PathVariable String status) {
         return ResponseEntity.ok(parkingSpaceService.getParkingSpacesByStatus(status));
+    }
+
+    @GetMapping("/space/{code}/status")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ParkingSpaceStatusResponse> getParkingSpaceStatus(
+            @PathVariable String code) {
+
+        ParkingSpaceStatusResponse response = parkingSpaceService.getStatusByCode(code);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

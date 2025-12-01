@@ -3,7 +3,9 @@ package com.smartparking.Smartparking.service.impl.space_iot;
 import com.smartparking.Smartparking.dto.request.space_iot.ParkingSpaceRequestDto;
 import com.smartparking.Smartparking.dto.request.space_iot.UpdateParkingSpaceDto;
 import com.smartparking.Smartparking.dto.response.space_iot.ParkingSpaceResponse;
+import com.smartparking.Smartparking.dto.response.space_iot.ParkingSpaceStatusResponse;
 import com.smartparking.Smartparking.entity.space_iot.ParkingSpace;
+import com.smartparking.Smartparking.exception.ResourceNotFoundException;
 import com.smartparking.Smartparking.repository.space_iot.ParkingSpaceRepository;
 import com.smartparking.Smartparking.service.space_iot.ParkingSpaceService;
 import jakarta.transaction.Transactional;
@@ -96,6 +98,20 @@ public class ParkingSpaceServiceImpl implements ParkingSpaceService {
                 .currentReservationId(ps.getCurrentReservationId())
                 .lastUpdated(ps.getLastUpdated())
                 .createdAt(ps.getCreatedAt())
+                .build();
+    }
+
+    // ParkingSpaceServiceImpl.java
+    @Override
+    public ParkingSpaceStatusResponse getStatusByCode(String code) {
+        ParkingSpace space = parkingSpaceRepository.findByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException("Parking space not found with code: " + code));
+
+        return ParkingSpaceStatusResponse.builder()
+                .code(space.getCode())
+                .status(space.getStatus().name().toLowerCase())  // available, reserved, etc.
+                .currentReservationId(space.getCurrentReservationId())
+                .lastUpdated(space.getLastUpdated())
                 .build();
     }
 }
